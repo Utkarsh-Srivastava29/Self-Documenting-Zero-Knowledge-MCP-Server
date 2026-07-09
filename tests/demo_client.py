@@ -10,16 +10,15 @@ Usage:
 
 import os
 import sys
-import json
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
-from src.introspector import DatabaseIntrospector
-from src.schema_registry import SchemaRegistry
-from src.sql_templates import SQLTemplateGenerator
-from src.security import ZeroKnowledgeValidator, SecurityError
+from src.introspector import DatabaseIntrospector  # noqa: E402
+from src.schema_registry import SchemaRegistry  # noqa: E402
+from src.security import SecurityError, ZeroKnowledgeValidator  # noqa: E402
+from src.sql_templates import SQLTemplateGenerator  # noqa: E402
 
 DB_PATH = os.path.join(PROJECT_ROOT, "legacy_store.db")
 
@@ -37,7 +36,7 @@ def main():
     separator("PHASE 1: Autonomous Database Introspection")
     introspector = DatabaseIntrospector(DB_PATH)
     schema = introspector.introspect()
-    
+
     print(f"\n  [OK] Discovered {len(schema.tables)} tables:")
     for name, table in sorted(schema.tables.items()):
         fk_info = f", {len(table.foreign_keys)} FKs" if table.foreign_keys else ""
@@ -46,12 +45,12 @@ def main():
     # ── Phase 2: Schema Registry ──
     separator("PHASE 2: Schema Registry")
     registry = SchemaRegistry(schema)
-    
+
     print(f"\n  [OK] Registry loaded with {len(registry.get_table_names())} tables")
     print(f"  [OK] Total relationships: {len(registry.get_all_relationships())}")
-    
+
     # Show a sample table summary
-    print(f"\n  Sample table summary (orders):")
+    print("\n  Sample table summary (orders):")
     for line in registry.get_table_summary("orders").split("\n"):
         print(f"       {line}")
 
@@ -59,15 +58,15 @@ def main():
     separator("PHASE 3: Pre-Validated SQL Template Generation")
     template_gen = SQLTemplateGenerator(registry)
     template_registry = template_gen.generate_all()
-    
+
     print(f"\n  [OK] Generated {template_registry.count} SQL templates")
-    print(f"\n  Templates by operation:")
+    print("\n  Templates by operation:")
     for op in ["CREATE", "READ", "UPDATE", "DELETE", "LIST", "SEARCH", "JOIN"]:
         templates = template_registry.list_by_operation(op)
         if templates:
             print(f"       {op}: {len(templates)} templates")
-    
-    print(f"\n  Sample template (read_customers):")
+
+    print("\n  Sample template (read_customers):")
     t = template_registry.get("read_customers")
     if t:
         print(f"       SQL: {t.sql}")
@@ -177,22 +176,22 @@ def main():
     separator("VERIFICATION COMPLETE")
     print(f"""
   All capabilities verified:
-  
+
   [OK] Autonomous database introspection (6 tables discovered)
   [OK] CRUD operations (create, read, list, search tested)
   [OK] Join queries (FK-based joins working)
   [OK] Zero-Knowledge security:
        - Unknown templates rejected
-       - SQL injection blocked  
+       - SQL injection blocked
        - Extra parameters rejected
        - Missing parameters rejected
   [OK] Audit logging (all operations tracked)
   [OK] {template_registry.count} pre-validated SQL templates
-  
+
   The server meets ALL task requirements:
   1. Autonomously scans undocumented legacy database    [OK]
   2. Generates CRUD tools for every table               [OK]
-  3. Creates prompts explaining how to join tables       [OK]  
+  3. Creates prompts explaining how to join tables       [OK]
   4. Enforces Zero-Knowledge security (templates only)   [OK]
 """)
 

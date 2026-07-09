@@ -12,12 +12,12 @@ Security guarantees:
 5. No Raw SQL: The LLM interacts with template IDs and typed parameters only
 """
 
-import sqlite3
 import logging
 import re
+import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from src.sql_templates import SQLTemplate, SQLTemplateRegistry
 
@@ -58,8 +58,8 @@ class AuditLogEntry:
     table: str
     params: dict
     success: bool
-    error: Optional[str] = None
-    row_count: Optional[int] = None
+    error: str | None = None
+    row_count: int | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -77,7 +77,7 @@ class AuditLogEntry:
 class ZeroKnowledgeValidator:
     """
     The core security layer of the MCP server.
-    
+
     All database access MUST go through this validator. It ensures:
     - Only pre-registered SQL templates can be executed
     - All parameters are validated against expected types
@@ -115,16 +115,16 @@ class ZeroKnowledgeValidator:
     ) -> list[dict]:
         """
         Validate a template ID and parameters, then execute the query.
-        
+
         This is the ONLY way to run SQL in the entire system.
-        
+
         Args:
             template_id: The registered template ID to execute
             params: Dictionary of parameter name → value
-            
+
         Returns:
             List of result rows as dictionaries
-            
+
         Raises:
             SecurityError: If template is unknown, params are invalid,
                           or dangerous patterns are detected
@@ -225,7 +225,7 @@ class ZeroKnowledgeValidator:
     def _sanitize_params(self, params: dict[str, Any]) -> None:
         """
         Defense-in-depth: check parameter values for dangerous SQL patterns.
-        
+
         Even though we use parameterized queries (which prevent SQL injection),
         we still check for suspicious patterns as an extra safety layer.
         """
@@ -254,8 +254,8 @@ class ZeroKnowledgeValidator:
         table: str,
         params: dict,
         success: bool,
-        error: Optional[str] = None,
-        row_count: Optional[int] = None,
+        error: str | None = None,
+        row_count: int | None = None,
     ) -> None:
         """Record an audit log entry."""
         entry = AuditLogEntry(

@@ -12,8 +12,7 @@ Features:
 """
 
 import logging
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 from mcp.server.fastmcp import FastMCP
 
@@ -55,7 +54,7 @@ class JoinAnalyzer:
     def analyze_and_register(self) -> list[str]:
         """
         Analyze all relationships and register MCP prompts.
-        
+
         Returns a list of registered prompt names.
         """
         self._discover_relationships()
@@ -72,7 +71,7 @@ class JoinAnalyzer:
     def _discover_relationships(self) -> None:
         """Discover and classify all table relationships."""
         all_fks = self.schema.get_all_relationships()
-        
+
         # Track which tables are junction tables (have 2+ FKs and primarily serve as connectors)
         table_fk_counts = {}
         for fk in all_fks:
@@ -86,7 +85,7 @@ class JoinAnalyzer:
                 if table:
                     # A junction table typically has FKs + maybe an ID + a few extra columns
                     non_fk_non_pk = len([
-                        c for c in table.columns 
+                        c for c in table.columns
                         if not c.is_primary_key and c.name not in [
                             fk.from_column for fk in table.foreign_keys
                         ]
@@ -100,7 +99,7 @@ class JoinAnalyzer:
                 # This FK is part of a many-to-many via junction table
                 # Find the other FK in the same junction table
                 other_fks = [
-                    f for f in all_fks 
+                    f for f in all_fks
                     if f.from_table == fk.from_table and f.to_table != fk.to_table
                 ]
                 for other_fk in other_fks:
@@ -114,7 +113,7 @@ class JoinAnalyzer:
                             relationship_type="many-to-many",
                             junction_table=fk.from_table,
                         ))
-            
+
             # Always add direct one-to-many relationship
             self.relationships.append(Relationship(
                 from_table=fk.from_table,
@@ -164,16 +163,16 @@ class JoinAnalyzer:
 
     def _register_join_prompts(self) -> None:
         """Register MCP prompts for each relationship."""
-        
+
         # Group relationships by table pairs for a cleaner prompt
         seen_pairs = set()
-        
+
         for rel in self.relationships:
             pair_key = tuple(sorted([rel.from_table, rel.to_table]))
             if pair_key in seen_pairs:
                 continue
             seen_pairs.add(pair_key)
-            
+
             prompt_name = f"join_{pair_key[0]}_and_{pair_key[1]}"
             explanation = self._generate_relationship_text(rel)
 
@@ -188,7 +187,7 @@ class JoinAnalyzer:
 
     def _register_exploration_prompt(self) -> None:
         """Register a prompt that guides data exploration."""
-        
+
         table_summaries = []
         for table_name in self.schema.get_table_names():
             table = self.schema.get_table(table_name)
@@ -212,23 +211,23 @@ class JoinAnalyzer:
                 )
 
         guide_text = (
-            f"# Database Exploration Guide\n\n"
-            f"## Available Tables\n"
+            "# Database Exploration Guide\n\n"
+            "## Available Tables\n"
             + "\n".join(table_summaries)
-            + f"\n\n## Relationships\n"
+            + "\n\n## Relationships\n"
             + "\n".join(relationship_summary)
-            + f"\n\n## Available Operations\n"
-            f"For each table, you can:\n"
-            f"- `list_{{table}}` — Browse rows with pagination\n"
-            f"- `read_{{table}}` — Get a specific row by primary key\n"
-            f"- `create_{{table}}` — Insert a new row\n"
-            f"- `update_{{table}}` — Update a row by primary key\n"
-            f"- `delete_{{table}}` — Delete a row by primary key\n"
-            f"- `search_{{table}}` — Search across text columns\n"
-            f"\n## Tips\n"
-            f"- All operations go through pre-validated SQL templates for security\n"
-            f"- Use join prompts to understand how tables relate to each other\n"
-            f"- Start with `list_{{table}}` to explore data before making changes\n"
+            + "\n\n## Available Operations\n"
+            "For each table, you can:\n"
+            "- `list_{table}` — Browse rows with pagination\n"
+            "- `read_{table}` — Get a specific row by primary key\n"
+            "- `create_{table}` — Insert a new row\n"
+            "- `update_{table}` — Update a row by primary key\n"
+            "- `delete_{table}` — Delete a row by primary key\n"
+            "- `search_{table}` — Search across text columns\n"
+            "\n## Tips\n"
+            "- All operations go through pre-validated SQL templates for security\n"
+            "- Use join prompts to understand how tables relate to each other\n"
+            "- Start with `list_{table}` to explore data before making changes\n"
         )
 
         @self.mcp.prompt(name="explore_database", description="Complete guide to exploring this database — tables, relationships, and available operations")

@@ -1,16 +1,17 @@
 """Tests for the Zero-Knowledge Security Validator."""
 
 import os
-import sys
 import sqlite3
+import sys
+
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.introspector import DatabaseIntrospector
 from src.schema_registry import SchemaRegistry
+from src.security import SecurityError, ZeroKnowledgeValidator
 from src.sql_templates import SQLTemplateGenerator
-from src.security import ZeroKnowledgeValidator, SecurityError
 
 
 @pytest.fixture
@@ -112,7 +113,7 @@ def test_security_report(secure_system):
     """Test that the security report is generated."""
     # Execute some operations
     secure_system.validate_and_execute("list_secrets", {"limit": 5, "offset": 0})
-    
+
     try:
         secure_system.validate_and_execute("nonexistent", {})
     except SecurityError:
@@ -136,7 +137,7 @@ def test_audit_log_records_all_operations(secure_system):
     """Test that the audit log captures all operations."""
     # Successful operation
     secure_system.validate_and_execute("list_secrets", {"limit": 5, "offset": 0})
-    
+
     # Failed operation
     try:
         secure_system.validate_and_execute("fake_template", {})
@@ -163,7 +164,7 @@ def test_delete_by_pk(secure_system):
     """Test deleting through the security layer."""
     result = secure_system.validate_and_execute("delete_secrets", {"id": 1})
     assert result[0]["affected_rows"] == 1
-    
+
     # Verify deleted
     remaining = secure_system.validate_and_execute("list_secrets", {
         "limit": 10, "offset": 0

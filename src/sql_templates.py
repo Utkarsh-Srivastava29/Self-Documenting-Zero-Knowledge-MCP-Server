@@ -13,8 +13,7 @@ Each template is:
 """
 
 import logging
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 from src.schema_registry import SchemaRegistry
 
@@ -49,7 +48,7 @@ class SQLTemplate:
 class SQLTemplateRegistry:
     """
     Registry of all pre-validated SQL templates.
-    
+
     Templates are generated at startup from the schema and cannot be
     modified at runtime. This is the foundation of the zero-knowledge
     security model.
@@ -65,7 +64,7 @@ class SQLTemplateRegistry:
         self._templates[template.id] = template
         logger.debug(f"Registered template: {template.id}")
 
-    def get(self, template_id: str) -> Optional[SQLTemplate]:
+    def get(self, template_id: str) -> SQLTemplate | None:
         """Retrieve a template by ID."""
         return self._templates.get(template_id)
 
@@ -89,7 +88,7 @@ class SQLTemplateRegistry:
 class SQLTemplateGenerator:
     """
     Generates SQL templates from the schema registry.
-    
+
     For each table, generates:
     - CREATE: INSERT INTO table (...) VALUES (...)
     - READ: SELECT * FROM table WHERE pk = ?
@@ -97,7 +96,7 @@ class SQLTemplateGenerator:
     - DELETE: DELETE FROM table WHERE pk = ?
     - LIST: SELECT * FROM table LIMIT ? OFFSET ?
     - SEARCH: SELECT * FROM table WHERE col LIKE ?
-    
+
     For each FK relationship, generates:
     - JOIN: SELECT ... FROM t1 JOIN t2 ON ...
     """
@@ -125,7 +124,6 @@ class SQLTemplateGenerator:
 
         pk_cols = table.primary_key_columns
         non_pk_cols = table.non_pk_columns
-        all_cols = table.column_names
 
         # --- CREATE (INSERT) ---
         if non_pk_cols:

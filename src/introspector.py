@@ -6,10 +6,9 @@ to discover schema information: tables, columns, foreign keys, indexes,
 and primary keys — with zero prior knowledge of the database structure.
 """
 
-import sqlite3
 import logging
+import sqlite3
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class ColumnInfo:
     name: str
     data_type: str
     is_nullable: bool
-    default_value: Optional[str]
+    default_value: str | None
     is_primary_key: bool
 
     def to_dict(self) -> dict:
@@ -91,7 +90,7 @@ class TableInfo:
         """Return all column names."""
         return [col.name for col in self.columns]
 
-    def get_column(self, name: str) -> Optional[ColumnInfo]:
+    def get_column(self, name: str) -> ColumnInfo | None:
         """Get column info by name."""
         for col in self.columns:
             if col.name == name:
@@ -153,7 +152,7 @@ class DatabaseIntrospector:
     def introspect(self) -> DatabaseSchema:
         """
         Perform full database introspection.
-        
+
         Returns a DatabaseSchema object containing complete metadata
         for every table, column, foreign key, and index.
         """

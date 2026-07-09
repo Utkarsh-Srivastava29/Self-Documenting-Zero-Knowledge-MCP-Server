@@ -10,10 +10,10 @@ Usage:
     python sample_data/seed_legacy_db.py [output_path]
 """
 
-import sqlite3
 import os
-import sys
 import random
+import sqlite3
+import sys
 from datetime import datetime, timedelta
 
 # Default database path
@@ -196,7 +196,7 @@ def seed_data(conn: sqlite3.Connection) -> None:
     # Update order totals
     cursor.execute("""
         UPDATE orders SET total_amount = (
-            SELECT COALESCE(SUM(quantity * unit_price), 0) 
+            SELECT COALESCE(SUM(quantity * unit_price), 0)
             FROM order_items WHERE order_items.order_id = orders.id
         )
     """)
@@ -240,12 +240,12 @@ def seed_database(db_path: str = DEFAULT_DB_PATH) -> str:
     try:
         create_schema(conn)
         seed_data(conn)
-        
+
         # Verify
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
         tables = [row[0] for row in cursor.fetchall()]
-        
+
         print(f"[OK] Legacy database created at: {db_path}")
         print(f"   Tables: {', '.join(tables)}")
         for table in tables:

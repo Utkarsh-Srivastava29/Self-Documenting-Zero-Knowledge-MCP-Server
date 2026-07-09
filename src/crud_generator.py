@@ -15,7 +15,7 @@ Generated tools per table:
 """
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -92,7 +92,7 @@ def _make_search_fn(table_name: str, template_id: str, validator: ZeroKnowledgeV
 class CRUDGenerator:
     """
     Dynamically generates MCP tool functions for each database table.
-    
+
     Each generated tool:
     - Has an auto-generated docstring from column metadata
     - Accepts typed parameters matching the table schema
@@ -114,7 +114,7 @@ class CRUDGenerator:
     def generate_all_tools(self) -> list[str]:
         """
         Generate and register CRUD tools for every table.
-        
+
         Returns a list of registered tool names.
         """
         for table_name in self.schema.get_table_names():
@@ -151,7 +151,7 @@ class CRUDGenerator:
             f"Insert a new row into the '{table_name}' table.\n\n"
             f"Parameters (pass as JSON object 'data'):\n"
             + "\n".join(col_docs)
-            + f"\n\nReturns the ID of the newly created row."
+            + "\n\nReturns the ID of the newly created row."
         )
 
         fn = _make_create_fn(table_name, f"create_{table_name}", self.validator)
@@ -200,7 +200,7 @@ class CRUDGenerator:
             f"Update a row in '{table_name}' by primary key.\n\n"
             f"Parameters (pass as JSON object 'data'):\n"
             + "\n".join(col_docs)
-            + f"\n\nAll non-PK columns must be provided."
+            + "\n\nAll non-PK columns must be provided."
         )
 
         fn = _make_update_fn(table_name, f"update_{table_name}", self.validator)

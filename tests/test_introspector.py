@@ -1,15 +1,15 @@
 """Tests for the Database Introspector."""
 
 import os
-import sys
 import sqlite3
-import tempfile
+import sys
+
 import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from src.introspector import DatabaseIntrospector, DatabaseSchema, TableInfo
+from src.introspector import DatabaseIntrospector, DatabaseSchema
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def test_introspect_discovers_tables(sample_db):
     """Test that introspection discovers all tables."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     assert isinstance(schema, DatabaseSchema)
     assert "users" in schema.table_names
     assert "posts" in schema.table_names
@@ -59,10 +59,10 @@ def test_introspect_discovers_columns(sample_db):
     """Test that columns are correctly discovered."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     users = schema.tables["users"]
     assert len(users.columns) == 4
-    
+
     col_names = [c.name for c in users.columns]
     assert "id" in col_names
     assert "name" in col_names
@@ -74,7 +74,7 @@ def test_introspect_identifies_primary_keys(sample_db):
     """Test that primary keys are identified."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     users = schema.tables["users"]
     assert users.primary_key_columns == ["id"]
 
@@ -83,7 +83,7 @@ def test_introspect_discovers_foreign_keys(sample_db):
     """Test that foreign keys are discovered."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     posts = schema.tables["posts"]
     assert len(posts.foreign_keys) == 1
     fk = posts.foreign_keys[0]
@@ -97,7 +97,7 @@ def test_introspect_counts_rows(sample_db):
     """Test that row counts are correct."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     assert schema.tables["users"].row_count == 2
     assert schema.tables["posts"].row_count == 3
 
@@ -106,12 +106,12 @@ def test_introspect_column_types(sample_db):
     """Test that column types are preserved."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     users = schema.tables["users"]
     id_col = users.get_column("id")
     assert id_col.data_type == "INTEGER"
     assert id_col.is_primary_key
-    
+
     name_col = users.get_column("name")
     assert name_col.data_type == "TEXT"
     assert not name_col.is_nullable
@@ -121,7 +121,7 @@ def test_introspect_nullable_columns(sample_db):
     """Test that nullability is correctly detected."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     users = schema.tables["users"]
     # 'name' is NOT NULL
     assert not users.get_column("name").is_nullable
@@ -133,7 +133,7 @@ def test_schema_to_dict(sample_db):
     """Test that schema can be serialized to dict."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     d = schema.to_dict()
     assert "tables" in d
     assert "total_tables" in d
@@ -144,7 +144,7 @@ def test_get_all_relationships(sample_db):
     """Test getting all relationships across tables."""
     introspector = DatabaseIntrospector(sample_db)
     schema = introspector.introspect()
-    
+
     rels = schema.get_all_relationships()
     assert len(rels) == 1
     assert rels[0].from_table == "posts"

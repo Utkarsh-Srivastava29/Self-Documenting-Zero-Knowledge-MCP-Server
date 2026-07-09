@@ -23,20 +23,20 @@ Usage:
     python server.py --seed
 """
 
-import os
-import sys
+import argparse
 import json
 import logging
-import argparse
+import os
+import sys
 
 from mcp.server.fastmcp import FastMCP
 
-from src.introspector import DatabaseIntrospector
-from src.schema_registry import SchemaRegistry
-from src.sql_templates import SQLTemplateGenerator
-from src.security import ZeroKnowledgeValidator
 from src.crud_generator import CRUDGenerator
+from src.introspector import DatabaseIntrospector
 from src.join_analyzer import JoinAnalyzer
+from src.schema_registry import SchemaRegistry
+from src.security import ZeroKnowledgeValidator
+from src.sql_templates import SQLTemplateGenerator
 
 # ── Logging setup (stderr only — stdout is reserved for MCP protocol) ──
 logging.basicConfig(
@@ -95,10 +95,10 @@ def build_server(db_path: str) -> FastMCP:
         logger.error("Run with --seed flag to create a demo database, or specify --db path")
         sys.exit(1)
 
-    logger.info(f"═══════════════════════════════════════════════════════")
-    logger.info(f"  Self-Documenting Zero-Knowledge MCP Server")
+    logger.info("═══════════════════════════════════════════════════════")
+    logger.info("  Self-Documenting Zero-Knowledge MCP Server")
     logger.info(f"  Database: {db_path}")
-    logger.info(f"═══════════════════════════════════════════════════════")
+    logger.info("═══════════════════════════════════════════════════════")
 
     # ── Step 2: Introspect the database ──
     logger.info("Phase 1: Introspecting database schema...")
@@ -143,14 +143,14 @@ def build_server(db_path: str) -> FastMCP:
     _register_resources(mcp, registry, validator)
 
     # ── Summary ──
-    logger.info(f"═══════════════════════════════════════════════════════")
-    logger.info(f"  Server ready!")
+    logger.info("═══════════════════════════════════════════════════════")
+    logger.info("  Server ready!")
     logger.info(f"  Tables discovered: {len(registry.get_table_names())}")
     logger.info(f"  CRUD tools registered: {len(tools)}")
     logger.info(f"  Prompts registered: {len(prompts)}")
     logger.info(f"  SQL templates: {template_registry.count}")
-    logger.info(f"  Security: Zero-Knowledge mode (template-only execution)")
-    logger.info(f"═══════════════════════════════════════════════════════")
+    logger.info("  Security: Zero-Knowledge mode (template-only execution)")
+    logger.info("═══════════════════════════════════════════════════════")
 
     return mcp
 

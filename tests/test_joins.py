@@ -1,16 +1,17 @@
 """Tests for the Join Analyzer."""
 
 import os
-import sys
 import sqlite3
+import sys
+
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.introspector import DatabaseIntrospector
 from src.schema_registry import SchemaRegistry
-from src.sql_templates import SQLTemplateGenerator
 from src.security import ZeroKnowledgeValidator
+from src.sql_templates import SQLTemplateGenerator
 
 
 @pytest.fixture
@@ -67,7 +68,7 @@ def relational_db(tmp_path):
 def test_join_templates_generated(relational_db):
     """Test that join templates are created for FK relationships."""
     tr = relational_db["template_registry"]
-    
+
     # books → authors join
     join_template = tr.get("join_books_to_authors")
     assert join_template is not None
@@ -78,7 +79,7 @@ def test_join_templates_generated(relational_db):
 def test_junction_table_join_templates(relational_db):
     """Test that junction table joins are generated."""
     tr = relational_db["template_registry"]
-    
+
     # book_tags → books and book_tags → tags
     assert tr.get("join_book_tags_to_books") is not None
     assert tr.get("join_book_tags_to_tags") is not None
@@ -87,7 +88,7 @@ def test_junction_table_join_templates(relational_db):
 def test_join_execution(relational_db):
     """Test executing a join query."""
     validator = relational_db["validator"]
-    
+
     # Get books by author id=1
     result = validator.validate_and_execute(
         "join_books_to_authors", {"authors_id": 1}
@@ -98,7 +99,7 @@ def test_join_execution(relational_db):
 def test_schema_registry_relationships(relational_db):
     """Test that the registry correctly reports relationships."""
     registry = relational_db["registry"]
-    
+
     all_rels = registry.get_all_relationships()
     assert len(all_rels) >= 3  # books→authors, book_tags→books, book_tags→tags
 
@@ -106,7 +107,7 @@ def test_schema_registry_relationships(relational_db):
 def test_tables_referencing(relational_db):
     """Test finding tables that reference a given table."""
     registry = relational_db["registry"]
-    
+
     # Who references authors?
     refs = registry.get_tables_referencing("authors")
     assert len(refs) == 1
@@ -117,7 +118,7 @@ def test_tables_referencing(relational_db):
 def test_schema_summary(relational_db):
     """Test that schema summary includes relationship info."""
     registry = relational_db["registry"]
-    
+
     summary = registry.get_full_schema_summary()
     assert "authors" in summary
     assert "books" in summary

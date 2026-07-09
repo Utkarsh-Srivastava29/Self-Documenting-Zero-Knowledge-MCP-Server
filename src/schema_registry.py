@@ -7,8 +7,8 @@ columns, relationships, and primary keys.
 """
 
 import logging
-from typing import Optional
-from src.introspector import DatabaseSchema, TableInfo, ColumnInfo, ForeignKeyInfo
+
+from src.introspector import ColumnInfo, DatabaseSchema, ForeignKeyInfo, TableInfo
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class SchemaRegistry:
     """
     Central registry for database schema metadata.
-    
+
     Populated by the DatabaseIntrospector at startup, then queried
     by the CRUD generator, join analyzer, and template engine.
     """
@@ -33,7 +33,7 @@ class SchemaRegistry:
         """Return all discovered table names, sorted alphabetically."""
         return self._schema.table_names
 
-    def get_table(self, table_name: str) -> Optional[TableInfo]:
+    def get_table(self, table_name: str) -> TableInfo | None:
         """Return full metadata for a specific table."""
         return self._schema.tables.get(table_name)
 
@@ -69,7 +69,7 @@ class SchemaRegistry:
     def get_tables_referencing(self, table_name: str) -> list[tuple[str, str, str]]:
         """
         Find all tables that have a FK pointing TO the given table.
-        
+
         Returns list of (from_table, from_column, to_column) tuples.
         """
         referencing = []
