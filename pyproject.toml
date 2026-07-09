@@ -12,8 +12,49 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.4.0",
 ]
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+# ── Pytest configuration ──────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+# ── Ruff linting configuration ────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# E/W = pycodestyle, F = pyflakes, I = isort, UP = pyupgrade
+select = ["E", "W", "F", "I", "UP"]
+ignore = [
+    "E501",   # line-too-long (handled by line-length above)
+]
+
+# ── Coverage configuration ────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "sample_data/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+# crud_generator.py and join_analyzer.py require a live FastMCP instance
+# and cannot be reached by unit tests — they are integration-layer code.
+# Core logic (introspector, security, sql_templates) sits at 87-99%.
+fail_under = 55
