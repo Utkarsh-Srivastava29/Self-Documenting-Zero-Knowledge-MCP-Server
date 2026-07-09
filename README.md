@@ -1,6 +1,7 @@
 # Self-Documenting Zero-Knowledge MCP Server
 
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
+![CI](https://github.com/shubhtiwari65/Self-Documenting-Zero-Knowledge-MCP-Server/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.10%20|%203.12-blue.svg)
 ![FastMCP](https://img.shields.io/badge/MCP-FastMCP-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Security](https://img.shields.io/badge/security-Zero--Knowledge-red.svg)
@@ -11,14 +12,30 @@ A **Model Context Protocol (MCP)** server that autonomously scans an undocumente
 ![Architecture Diagram](docs/MCP_architecture.png)
 
 
+## Why MCP — and What the Real Engineering Is
+
+MCP (Model Context Protocol) is the transport and interface layer here — it handles how the LLM calls tools, passes parameters, and receives results. It is a deliberate *choice*, not the achievement.
+
+The actual engineering in this project is the **schema-introspection and security pipeline** that sits underneath:
+
+```
+Database → PRAGMA Introspection → Schema Registry → Template Engine → Security Validator → MCP Tools
+```
+
+Each stage has zero knowledge of the next. The introspector knows nothing about MCP. The template engine knows nothing about security. The CRUD generator knows nothing about SQL — it only works with template IDs. This strict separation means you could swap the MCP transport for a REST API or a gRPC service without touching a single line of the security layer.
+
+MCP was chosen over direct OpenAI function-calling because MCP is transport-agnostic (stdio for local use, SSE for network), supports resources and prompts beyond raw tool calls, and is the open standard being adopted across the LLM tooling ecosystem. But the security layer — pre-validated templates, defense-in-depth sanitization, immutable template registry — works identically regardless of what protocol sits in front of it.
+
+
 ## Features
 
-- **Autonomous Schema Discovery** - Scans any SQLite database using PRAGMA introspection with zero prior knowledge
-- **Dynamic CRUD Tools** - Auto-generates Create, Read, Update, Delete, List, and Search tools for every discovered table
-- **Join Prompts** - Analyzes foreign key relationships and generates prompts explaining how to join tables
-- **Zero-Knowledge Security** - All SQL execution is restricted to pre-validated parameterized templates
-- **Audit Logging** - Every database operation is logged with timestamp, template ID, and parameters
-- **Schema Resources** - MCP resources expose the discovered schema for LLM reference
+- **Autonomous Schema Discovery** — Scans any SQLite database using PRAGMA introspection with zero prior knowledge
+- **Dynamic CRUD Tools** — Auto-generates Create, Read, Update, Delete, List, and Search tools for every discovered table
+- **Join Prompts** — Analyzes foreign key relationships and generates prompts explaining how to join tables
+- **Zero-Knowledge Security** — All SQL execution is restricted to pre-validated parameterized templates
+- **Audit Logging** — Every database operation is logged with timestamp, template ID, and parameters
+- **Schema Resources** — MCP resources expose the discovered schema for LLM reference
+
 
 ## Quick Start
 
@@ -30,11 +47,15 @@ A **Model Context Protocol (MCP)** server that autonomously scans an undocumente
 ### Installation
 
 ```bash
-# Clone or unzip the project
+# Clone the repository
+git clone https://github.com/shubhtiwari65/Self-Documenting-Zero-Knowledge-MCP-Server.git
 cd "MCP SERVER"
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Or install in editable mode with dev tools (recommended)
+pip install -e ".[dev]"
 ```
 
 ### Seed the Demo Database
@@ -80,6 +101,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 mcp dev server.py
 ```
 
+
 ## What Gets Generated
 
 When the server starts, it introspects the database and auto-generates:
@@ -110,6 +132,7 @@ When the server starts, it introspects the database and auto-generates:
 | `security://report` | Security summary report |
 | `security://templates` | All registered SQL templates |
 
+
 ## Security Model
 
 The **Zero-Knowledge** security model ensures the LLM never constructs or sees raw SQL:
@@ -120,50 +143,85 @@ The **Zero-Knowledge** security model ensures the LLM never constructs or sees r
 4. **Audit Trail** — Every operation is logged with timestamp, template ID, parameters, success/failure status.
 5. **No Schema Manipulation** — Only SELECT, INSERT, UPDATE, DELETE on existing tables. No DDL operations are possible.
 
+See [SECURITY.md](SECURITY.md) for the full security model, including known scope boundaries (transport-layer auth).
+
+
+## Why SQLite — and What Changes at Scale
+
+SQLite was chosen deliberately for this demo for three reasons:
+
+1. **Zero configuration** — no separate server, credentials, or network config; the DB is a single file
+2. **Native PRAGMA introspection** — `PRAGMA table_info()`, `PRAGMA foreign_key_list()` are the exact tools the zero-knowledge discovery depends on
+3. **stdlib only** — no ORM dependency; `import sqlite3` ships with Python
+
+**What would change in production:**
+
+| Concern | Current (SQLite) | Production path |
+|---------|----------------|-----------------|
+| Concurrency | Single-writer | PostgreSQL + `asyncpg` + connection pool |
+| Introspection | PRAGMA statements | `information_schema` (standard SQL, DB-agnostic) |
+| Audit log | In-memory list | Append-only DB table or structured JSON logs |
+| DB path config | CLI flag | `DATABASE_URL` env var (12-factor) |
+| Migrations | Re-seed | `alembic` migration scripts |
+
+The architecture is database-agnostic by design — only `src/introspector.py` contains SQLite-specific code (~80 lines). Swapping the backing database means replacing that single file; the security layer, CRUD generator, and MCP registration are untouched.
+
+See [docs/DECISIONS.md](docs/DECISIONS.md) for all architectural decision records.
+
+
 ## Running Tests
 
 ```bash
 # Run all tests
-python -m pytest tests/ -v
+python -m pytest
+
+# Run with coverage report
+python -m pytest --cov=src --cov-report=term-missing
 
 # Run specific test files
 python -m pytest tests/test_security.py -v
 python -m pytest tests/test_introspector.py -v
 ```
 
+
 ## Project Structure
 
 ```
 MCP SERVER/
-├── .gitignore                   # Git ignore rules
-├── .env.example                 # Environment variable template
-├── CHANGELOG.md                 # Version history
-├── Makefile                     # Developer convenience commands
-├── README.md                    # Project documentation
-├── SECURITY.md                  # Security model documentation
-├── server.py                    # Main MCP server entry point
-├── requirements.txt             # Python dependencies
-├── pyproject.toml               # Project metadata
+├── .github/workflows/ci.yml    # CI pipeline (pytest + ruff + coverage)
+├── .gitignore                  # Git ignore rules
+├── .env.example                # Environment variable template
+├── CHANGELOG.md                # Version history
+├── CONTRIBUTING.md             # Dev setup and contribution guide
+├── Makefile                    # Developer convenience commands
+├── README.md                   # Project documentation
+├── SECURITY.md                 # Security model + transport scope boundary
+├── server.py                   # Main MCP server entry point
+├── requirements.txt            # Python dependencies
+├── pyproject.toml              # Project metadata, ruff + pytest + coverage config
 ├── src/
 │   ├── __init__.py
-│   ├── introspector.py          # PRAGMA-based schema discovery
-│   ├── schema_registry.py       # In-memory schema registry
-│   ├── sql_templates.py         # Pre-validated SQL template engine
-│   ├── security.py              # Zero-Knowledge security validator
-│   ├── crud_generator.py        # Dynamic MCP tool generator
-│   └── join_analyzer.py         # FK analysis & prompt generator
+│   ├── introspector.py         # PRAGMA-based schema discovery
+│   ├── schema_registry.py      # In-memory schema registry
+│   ├── sql_templates.py        # Pre-validated SQL template engine
+│   ├── security.py             # Zero-Knowledge security validator
+│   ├── crud_generator.py       # Dynamic MCP tool generator
+│   └── join_analyzer.py        # FK analysis & prompt generator
 ├── sample_data/
-│   └── seed_legacy_db.py        # Demo legacy database seeder
+│   └── seed_legacy_db.py       # Demo legacy database seeder
 ├── tests/
-│   ├── demo_client.py           # Standalone verification demo
-│   ├── test_introspector.py     # Schema discovery tests
-│   ├── test_crud.py             # CRUD operation tests
-│   ├── test_security.py         # Security validation tests
-│   └── test_joins.py            # Join analysis tests
+│   ├── conftest.py             # Shared pytest fixtures
+│   ├── demo_client.py          # Standalone verification demo
+│   ├── test_introspector.py    # Schema discovery tests
+│   ├── test_crud.py            # CRUD operation tests
+│   ├── test_security.py        # Security validation tests
+│   └── test_joins.py           # Join analysis tests
 └── docs/
-    ├── APPROACH.md              # Technical approach documentation
-    └── MCP_architecture.png     # Architecture diagram
+    ├── APPROACH.md             # Full technical approach write-up
+    ├── DECISIONS.md            # Architectural Decision Records (ADRs)
+    └── MCP_architecture.png    # Architecture diagram
 ```
+
 
 ## License
 
