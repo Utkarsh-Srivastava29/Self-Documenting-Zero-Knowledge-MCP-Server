@@ -217,8 +217,14 @@ MCP SERVER/
 │   ├── test_security.py        # Security validation tests
 │   └── test_joins.py           # Join analysis tests
 └── docs/
+    ├── API_REFERENCE.md        # API reference documentation
     ├── APPROACH.md             # Full technical approach write-up
+    ├── CLIENT_INTEGRATION_GUIDE.md  # LLM agent integration guide
+    ├── CONFIGURATION.md        # Configuration reference guide
     ├── DECISIONS.md            # Architectural Decision Records (ADRs)
+    ├── DEPLOYMENT.md           # Production deployment & operations guide
+    ├── TESTING.md              # Testing guide & test suite documentation
+    ├── TROUBLESHOOTING.md      # Comprehensive troubleshooting & diagnostics
     └── MCP_architecture.png    # Architecture diagram
 ```
 

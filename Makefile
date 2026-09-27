@@ -3,20 +3,22 @@
 # Makefile — Developer convenience commands
 # ============================================================
 
-.PHONY: help install seed run sse test dev clean
+.PHONY: help install seed run sse test coverage lint dev clean
 
 # Default target
 help:
 	@echo ""
 	@echo "  Self-Documenting Zero-Knowledge MCP Server"
 	@echo "  ─────────────────────────────────────────"
-	@echo "  make install  →  Install Python dependencies"
-	@echo "  make seed     →  Seed the demo legacy database"
-	@echo "  make run      →  Run server (stdio transport)"
-	@echo "  make sse      →  Run server (SSE on port 8080)"
-	@echo "  make test     →  Run all tests with pytest"
-	@echo "  make dev      →  Launch MCP Inspector"
-	@echo "  make clean    →  Remove cache files"
+	@echo "  make install   →  Install Python dependencies"
+	@echo "  make seed      →  Seed the demo legacy database"
+	@echo "  make run       →  Run server (stdio transport)"
+	@echo "  make sse       →  Run server (SSE on port 8080)"
+	@echo "  make test      →  Run all tests with pytest"
+	@echo "  make coverage  →  Run tests with coverage report"
+	@echo "  make lint      →  Run ruff linter"
+	@echo "  make dev       →  Launch MCP Inspector"
+	@echo "  make clean     →  Remove cache files"
 	@echo ""
 
 install:
@@ -33,6 +35,12 @@ sse:
 
 test:
 	python -m pytest tests/ -v
+
+coverage:
+	python -m pytest --cov=src --cov-report=term-missing
+
+lint:
+	ruff check .
 
 dev:
 	mcp dev server.py
