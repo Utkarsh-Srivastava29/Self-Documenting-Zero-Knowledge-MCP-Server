@@ -1,6 +1,6 @@
 # Self-Documenting Zero-Knowledge MCP Server
 
-![CI](https://github.com/shubhtiwari65/Self-Documenting-Zero-Knowledge-MCP-Server/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Utkarsh-Srivastava29/Self-Documenting-Zero-Knowledge-MCP-Server/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%20|%203.12-blue.svg)
 ![FastMCP](https://img.shields.io/badge/MCP-FastMCP-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -48,7 +48,7 @@ MCP was chosen over direct OpenAI function-calling because MCP is transport-agno
 
 ```bash
 # Clone the repository
-git clone https://github.com/shubhtiwari65/Self-Documenting-Zero-Knowledge-MCP-Server.git
+git clone https://github.com/Utkarsh-Srivastava29/Self-Documenting-Zero-Knowledge-MCP-Server.git
 cd "MCP SERVER"
 
 # Install dependencies
